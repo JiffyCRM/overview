@@ -39,6 +39,7 @@ Same as Linux, run inside your WSL shell.
 ```
 
 By default a `jiffy` folder is created relative to the current working directory.
+When run from inside an `overview` checkout, the parent directory is used instead so service repos become siblings of `overview`.
 
 ## Update all services
 
