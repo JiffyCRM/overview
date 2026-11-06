@@ -1,4 +1,19 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jiffycrm-postgres
+    environment:
+      POSTGRES_USER: jiffy
+      POSTGRES_PASSWORD: jiffy
+      POSTGRES_DB: jiffycrm
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jiffy
+    restart: unless-stopped
+
   ui:
     build:
       context: ../ui
@@ -9,6 +24,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=postgres://jiffy:jiffy@postgres:5432/jiffycrm
+    depends_on:
+      - postgres
+    networks:
+      - jiffy
     restart: unless-stopped
 
 # Future services (uncomment / add as they are created):
@@ -16,11 +36,24 @@ services:
 #    build: ../auth-service
 #    ports:
 #      - "4001:4001"
+#    networks:
+#      - jiffy
 #  contact-service:
 #    build: ../contact-service
 #    ports:
 #      - "4002:4002"
+#    networks:
+#      - jiffy
 #  deal-service:
 #    build: ../deal-service
 #    ports:
 #      - "4003:4003"
+#    networks:
+#      - jiffy
+
+networks:
+  jiffy:
+    name: jiffycrm-network
+
+volumes:
+  postgres_data:

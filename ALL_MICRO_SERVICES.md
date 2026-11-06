@@ -18,4 +18,3 @@ This document lists the repositories that make up JiffyCRM. Each service lives i
 | deal-service | Deals, pipelines, and opportunities. |
 
 > Add a row here whenever a new service repository is created, and add the corresponding entry to `scripts/clone-all.sh` and `docker-compose.yml`.
-EOF

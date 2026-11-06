@@ -65,7 +65,20 @@ npm install
 npm run dev
 ```
 
+## Architecture
+
+See [docs/architecture.md](./docs/architecture.md) for the microservice layout and data flow.
+
+## Quick commands (Makefile)
+
+```bash
+make clone   # clone/update all services
+make pull    # pull latest in all services
+make up      # docker compose up --build
+make down    # docker compose down
+make status  # git status of all services
+```
+
 ## Services
 
 See [ALL_MICRO_SERVICES.md](./ALL_MICRO_SERVICES.md) for the full list.
-EOF
