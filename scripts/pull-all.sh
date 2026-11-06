@@ -24,7 +24,7 @@ if [ -n "${1:-}" ]; then
 elif [ "$(basename "$(pwd)")" = "overview" ]; then
     TARGET=".."
 else
-    TARGET="./jiffy"
+    TARGET="./JiffyCRM"
 fi
 TARGET="${TARGET//\\//}"
 

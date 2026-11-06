@@ -34,20 +34,20 @@ Same as Linux, run inside your WSL shell.
 ### Custom location
 
 ```bash
-./scripts/clone-all.sh /home/user/projects/jiffy
-./scripts/clone-all.sh "C:/Users/Teracura/Projects/jiffy"
+./scripts/clone-all.sh /home/user/projects/JiffyCRM
+./scripts/clone-all.sh "C:/Users/Teracura/Projects/JiffyCRM"
 ```
 
-By default a `jiffy` folder is created relative to the current working directory.
+By default a `JiffyCRM` folder is created relative to the current working directory.
 When run from inside an `overview` checkout, the parent directory is used instead so service repos become siblings of `overview`.
 
 ## Update all services
 
 ```bash
-# from the folder that contains the service repos (e.g. ./jiffy)
+# from the folder that contains the service repos (e.g. ./JiffyCRM)
 ../overview/scripts/pull-all.sh
 # or, from anywhere:
-/path/to/overview/scripts/pull-all.sh /path/to/jiffy
+/path/to/overview/scripts/pull-all.sh /path/to/JiffyCRM
 ```
 
 ## Run with Docker Compose

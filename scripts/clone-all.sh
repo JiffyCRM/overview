@@ -3,8 +3,8 @@
 # Clone (or update) every JiffyCRM repository into a single folder.
 #
 # Usage:
-#   ./scripts/clone-all.sh                 # creates ./jiffy
-#   ./scripts/clone-all.sh /path/to/jiffy  # custom location
+#   ./scripts/clone-all.sh                 # creates ./JiffyCRM
+#   ./scripts/clone-all.sh /path/to/JiffyCRM  # custom location
 #
 set -euo pipefail
 
@@ -30,12 +30,11 @@ REPOS=(
 
 # ---------- target folder ----------
 if [ -n "${1:-}" ]; then
-    # User gave an explicit path
     TARGET="$1"
+elif [ "$(basename "$(pwd)")" = "overview" ]; then
+    TARGET=".."
 else
-    # Default: create a "jiffy" folder next to the current overview repo
-    # (i.e. sibling of the overview directory)
-    TARGET="$(cd .. && pwd)/jiffy"
+    TARGET="./JiffyCRM"
 fi
 # Normalize Windows-style backslashes
 TARGET="${TARGET//\\//}"
