@@ -1,0 +1,31 @@
+.PHONY: clone pull up down help
+
+# Default target folder (relative)
+TARGET ?= jiffy
+
+help:
+	@echo "JiffyCRM Overview"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make clone [TARGET=path]   Clone/update all repos into TARGET (default: ./jiffy)"
+	@echo "  make pull  [TARGET=path]   Pull latest changes in TARGET (default: ./jiffy)"
+	@echo "  make up                    Start all services with docker compose"
+	@echo "  make down                  Stop all services"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make clone"
+	@echo "  make clone TARGET=/home/user/projects/jiffy"
+	@echo "  make clone TARGET=\"C:/Users/Teracura/Projects/jiffy\""
+	@echo "  make pull TARGET=./jiffy"
+
+clone:
+	@./scripts/clone-all.sh "$(TARGET)"
+
+pull:
+	@./scripts/pull-all.sh "$(TARGET)"
+
+up:
+	docker compose up --build
+
+down:
+	docker compose down
