@@ -52,6 +52,9 @@ When run from inside an `overview` checkout, the parent directory is used instea
 
 ## Run with Docker Compose
 
+> **Permissions:** On Linux, Docker requires root access unless your user is in the `docker` group. Use `sudo make up` / `sudo make down` (or `sudo docker compose up --build` / `sudo docker compose down`). On macOS, Docker Desktop runs as your user, so `make up` works without sudo. On Windows, run the terminal as Administrator or ensure Docker Desktop is running; `make up` usually works without sudo.
+
+
 ```bash
 docker compose up --build
 ```
