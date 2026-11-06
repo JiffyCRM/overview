@@ -29,18 +29,16 @@ REPOS=(
 )
 
 # ---------- target folder ----------
-# Default target: when run from inside an "overview" checkout, use its parent
-# directory so service repos become siblings; otherwise create ./jiffy.
 if [ -n "${1:-}" ]; then
+    # User gave an explicit path
     TARGET="$1"
-elif [ "$(basename "$(pwd)")" = "overview" ]; then
-    TARGET=".."
 else
-    TARGET="./jiffy"
+    # Default: create a "jiffy" folder next to the current overview repo
+    # (i.e. sibling of the overview directory)
+    TARGET="$(cd .. && pwd)/jiffy"
 fi
-# Normalize Windows-style backslashes to forward slashes (Git Bash / WSL).
+# Normalize Windows-style backslashes
 TARGET="${TARGET//\\//}"
-
 if [ ! -d "$TARGET" ]; then
     mkdir -p "$TARGET"
     printf '%bCreated target folder: %s%b\n' "$GREEN" "$TARGET" "$NC"
