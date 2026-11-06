@@ -29,7 +29,15 @@ REPOS=(
 )
 
 # ---------- target folder ----------
-TARGET="${1:-jiffy}"
+# Default target: when run from inside an "overview" checkout, use its parent
+# directory so service repos become siblings; otherwise create ./jiffy.
+if [ -n "${1:-}" ]; then
+    TARGET="$1"
+elif [ "$(basename "$(pwd)")" = "overview" ]; then
+    TARGET=".."
+else
+    TARGET="./jiffy"
+fi
 # Normalize Windows-style backslashes to forward slashes (Git Bash / WSL).
 TARGET="${TARGET//\\//}"
 

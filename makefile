@@ -1,14 +1,14 @@
 .PHONY: clone pull up down status help
 
 # Default target folder (relative)
-TARGET ?= jiffy
+TARGET ?=
 
 help:
 	@echo "JiffyCRM Overview"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make clone [TARGET=path]   Clone/update all repos into TARGET (default: ./jiffy)"
-	@echo "  make pull  [TARGET=path]   Pull latest changes in TARGET (default: ./jiffy)"
+	@echo "  make clone [TARGET=path]   Clone/update all repos into TARGET (default: parent dir if in overview, else ./jiffy)"
+	@echo "  make pull  [TARGET=path]   Pull latest changes in TARGET (default: ../jiffy)"
 	@echo "  make status [TARGET=path]  Git status of all services"
 	@echo "  make up                    Start all services with docker compose"
 	@echo "  make down                  Stop all services"

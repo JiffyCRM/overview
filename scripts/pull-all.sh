@@ -19,7 +19,13 @@ else
     RED=''; GREEN=''; YELLOW=''; BLUE=''; BOLD=''; NC=''
 fi
 
-TARGET="${1:-.}"
+if [ -n "${1:-}" ]; then
+    TARGET="$1"
+elif [ "$(basename "$(pwd)")" = "overview" ]; then
+    TARGET=".."
+else
+    TARGET="./jiffy"
+fi
 TARGET="${TARGET//\\//}"
 
 if [ ! -d "$TARGET" ]; then
