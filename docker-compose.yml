@@ -3,7 +3,7 @@ version: "3.9"
 services:
   ui:
     build:
-      context: ./ui
+      context: ../ui
       dockerfile: Dockerfile
     image: jiffycrm/ui:latest
     container_name: jiffycrm-ui
@@ -15,14 +15,14 @@ services:
 
 # Future services (uncomment / add as they are created):
 #  auth-service:
-#    build: ./auth-service
+#    build: ../auth-service
 #    ports:
 #      - "4001:4001"
 #  contact-service:
-#    build: ./contact-service
+#    build: ../contact-service
 #    ports:
 #      - "4002:4002"
 #  deal-service:
-#    build: ./deal-service
+#    build: ../deal-service
 #    ports:
 #      - "4003:4003"
