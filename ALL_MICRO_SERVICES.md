@@ -1,21 +1,96 @@
 # All Microservices
 
-This document lists the repositories that make up JiffyCRM. Each service lives in its own repository under the [JiffyCRM](https://github.com/JiffyCRM) organization and is cloned by `scripts/clone-all.sh`.
+This document is the service catalog for JiffyCRM. Each service lives in its own repository under the [JiffyCRM](https://github.com/JiffyCRM) organization and is cloned by `scripts/clone-all.sh`.
 
-## Current
+## Current services
 
-| Service | Repository | Description |
-| --- | --- | --- |
-| overview | [JiffyCRM/overview](https://github.com/JiffyCRM/overview) | Meta/orchestration repository. Single entry point for bootstrapping, docs, and shared docker-compose. |
-| ui | [JiffyCRM/ui](https://github.com/JiffyCRM/ui) | Frontend web application (Next.js + shadcn/ui). Owns Google/Microsoft OAuth and calls identity-link server-side. |
-| identity-link | [JiffyCRM/identity-link](https://github.com/JiffyCRM/identity-link) | Identity mapping service (Go + gRPC + Postgres). Maps external providers to internal user IDs; stores only HMAC-hashed emails. |
+| Service | Repository | Runtime | Local endpoint | Data ownership |
+| --- | --- | --- | --- | --- |
+| overview | [JiffyCRM/overview](https://github.com/JiffyCRM/overview) | Orchestration only | - | None |
+| ui | [JiffyCRM/ui](https://github.com/JiffyCRM/ui) | Next.js 16 + Auth.js | http://localhost:3000 | No app database yet; encrypted JWT session cookies |
+| identity-link | [JiffyCRM/identity-link](https://github.com/JiffyCRM/identity-link) | Go + gRPC + pgx | `localhost:50051` | Dedicated `identity_link` PostgreSQL database |
+
+### overview
+
+Meta repository. Contains the bootstrap and update scripts, service catalog, architecture docs, shared `docker-compose.yml`, and development tooling. It runs no application code and owns no data.
+
+### ui
+
+Next.js App Router frontend using shadcn/ui.
+
+- Owns the Google and Microsoft Entra ID OAuth/OIDC flow through Auth.js.
+- Calls `identity-link.GetOrCreate` from server-side code only.
+- Stores the internal user ID in an encrypted JWT session cookie.
+- Never exposes email, provider subject, or OAuth tokens to the browser session.
+- Does not currently use a database or Auth.js adapter.
+- Is linked to the shared Infisical `jiffycrm` / `dev` environment through `.infisical.yaml`.
+
+### identity-link
+
+Go gRPC service that owns the mapping from external provider identities to internal opaque user IDs.
+
+- Providers are normalized external names such as `google` and `microsoft-entra-id`.
+- Microsoft subjects are stored as `${tid}:${oid}` to avoid cross-tenant collisions.
+- Emails are stored only as HMAC-SHA256 hashes; no plaintext email column exists.
+- Uses a dedicated `identity_link` database and runtime role.
+- Exposes its own README and complete documentation under `docs/`.
+- Is linked to the shared Infisical `jiffycrm` / `dev` environment through `.infisical.yaml`.
+
+## Local infrastructure
+
+These are development components in `docker-compose.yml`, not independently versioned services.
+
+| Component | Image | Purpose | Local endpoint |
+| --- | --- | --- | --- |
+| postgres | `postgres:latest` | Existing UI/CRM database container (`jiffycrm`); not used by auth today | `localhost:5432` |
+| identity-postgres | `postgres:16-alpine` | Dedicated identity-link database (`identity_link`) | Internal only |
+| identity-link-migrate | Built from identity-link | One-shot identity-link migration job | - |
+| adminer | `adminer:latest` | Optional database UI, enabled with `make db` | http://localhost:8080 |
+
+All containers share the `jiffycrm-network` Compose network.
+
+## Communication rules
+
+- The browser talks only to the UI.
+- The UI server calls `identity-link` over gRPC at `identity-link:50051` inside Compose, or `localhost:50051` locally.
+- Future backend services also call `identity-link` over gRPC.
+- The browser never calls `identity-link` directly.
+- Services never read or write another service's database.
+
+## Identity flow
+
+```text
+Browser -> UI OAuth callback (Google / Microsoft Entra ID)
+        -> UI server-side gRPC GetOrCreate
+        -> identity-link
+        -> identity_link PostgreSQL
+        -> internal user_id returned
+        -> UI session cookie contains only user_id
+```
+
+## Dev secrets and tooling
+
+- Shared dev secrets are managed in Infisical project `jiffycrm`, environment `dev`.
+- Each repository that needs direct secret access contains an `.infisical.yaml` with the project ID only.
+- `make up` runs Docker Compose through `infisical secrets-manager run --env=dev`.
+- `make secrets-check` verifies the required values are available.
+- `make db` starts Adminer; `make db-stop` stops it.
+- See the [README](README.md) for the full Makefile command list and database UI credentials.
 
 ## Planned
 
 | Service | Description |
 | --- | --- |
-| auth-service | Authentication and authorization (SSO, sessions, tokens). |
+| auth-service | Future extraction of authentication only if JiffyCRM needs per-customer SSO/SAML/SCIM, token issuance to other services, or centralized session revocation. Current Google/Microsoft OAuth remains in the UI. |
+| membership-service | Organizations, memberships, roles, and invitations. Will resolve existing users through `identity-link.FindByEmail`. |
 | contact-service | Contact and account management. |
 | deal-service | Deals, pipelines, and opportunities. |
 
-> Add a row here whenever a new service repository is created, and add the corresponding entry to `scripts/clone-all.sh` and `docker-compose.yml`.
+## Adding a service
+
+1. Create the repository under the `JiffyCRM` organization.
+2. Add it to `scripts/clone-all.sh`.
+3. Add its Compose service, network, and dedicated database to `docker-compose.yml`.
+4. Add its dev secrets to the Infisical `jiffycrm` project and commit an `.infisical.yaml` containing only the project ID.
+5. Update this catalog with its runtime, local endpoint, and data ownership.
+6. Update `docs/architecture.md` and the service README.
