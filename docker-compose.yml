@@ -31,6 +31,61 @@ services:
       - jiffy
     restart: unless-stopped
 
+  identity-postgres:
+    image: postgres:16-alpine
+    container_name: jiffycrm-identity-postgres
+    environment:
+      POSTGRES_USER: identity_link
+      POSTGRES_PASSWORD: identity_link
+      POSTGRES_DB: identity_link
+    volumes:
+      - identity_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_link -d identity_link"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - jiffy
+    restart: unless-stopped
+
+  identity-link-migrate:
+    build:
+      context: ../identity-link
+      dockerfile: Dockerfile
+    image: jiffycrm/identity-link:latest
+    container_name: jiffycrm-identity-link-migrate
+    entrypoint: ["/usr/local/bin/identity-link-migrate", "up"]
+    environment:
+      - DATABASE_URL=postgres://identity_link:identity_link@identity-postgres:5432/identity_link?sslmode=disable
+    depends_on:
+      identity-postgres:
+        condition: service_healthy
+    networks:
+      - jiffy
+    restart: "no"
+
+  identity-link:
+    build:
+      context: ../identity-link
+      dockerfile: Dockerfile
+    image: jiffycrm/identity-link:latest
+    container_name: jiffycrm-identity-link
+    ports:
+      - "127.0.0.1:50051:50051"
+    environment:
+      - DATABASE_URL=postgres://identity_link:identity_link@identity-postgres:5432/identity_link?sslmode=disable
+      - "EMAIL_HMAC_SECRET=${IDENTITY_LINK_HMAC_SECRET:?Set IDENTITY_LINK_HMAC_SECRET to at least 32 random bytes}"
+      - LOG_LEVEL=info
+    depends_on:
+      identity-postgres:
+        condition: service_healthy
+      identity-link-migrate:
+        condition: service_completed_successfully
+    networks:
+      - jiffy
+    restart: unless-stopped
+
 # Future services (uncomment / add as they are created):
 #  auth-service:
 #    build: ../auth-service
@@ -57,3 +112,4 @@ networks:
 
 volumes:
   postgres_data:
+  identity_postgres_data:

@@ -26,6 +26,7 @@ fi
 REPOS=(
     "overview|https://github.com/JiffyCRM/overview.git"
     "ui|https://github.com/JiffyCRM/ui.git"
+    "identity-link|https://github.com/JiffyCRM/identity-link.git"
 )
 
 # ---------- target folder ----------

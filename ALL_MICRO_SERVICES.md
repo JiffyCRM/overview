@@ -8,6 +8,7 @@ This document lists the repositories that make up JiffyCRM. Each service lives i
 | --- | --- | --- |
 | overview | [JiffyCRM/overview](https://github.com/JiffyCRM/overview) | Meta/orchestration repository. Single entry point for bootstrapping, docs, and shared docker-compose. |
 | ui | [JiffyCRM/ui](https://github.com/JiffyCRM/ui) | Frontend web application (Next.js + shadcn/ui). |
+| identity-link | [JiffyCRM/identity-link](https://github.com/JiffyCRM/identity-link) | Identity mapping service (Go + gRPC + Postgres). Maps external providers to internal user IDs; stores only HMAC-hashed emails. |
 
 ## Planned
 
