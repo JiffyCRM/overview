@@ -16,8 +16,8 @@ jiffy/
 
 ## Communication
 
-- The `ui` service calls backend HTTP/REST services through their exposed ports.
-- `identity-link` exposes gRPC on port `50051`. Backend services call it to resolve provider identities, create users, and check emails. The browser does not call it directly.
+- The `ui` service owns the Google/Microsoft OAuth flow and calls `identity-link` over gRPC from server-side code only.
+- Other backend services call `identity-link` gRPC on port `50051` to resolve provider identities, create users, and check emails. The browser never calls it directly.
 - Planned services will follow the same rule: service-to-service communication over APIs, never direct database access.
 
 ## Data

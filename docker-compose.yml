@@ -25,8 +25,21 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgres://jiffy:jiffy@postgres:5432/jiffycrm
+      - IDENTITY_LINK_ADDR=identity-link:50051
+      - AUTH_URL=http://localhost:3000
+      - AUTH_TRUST_HOST=true
+      - "AUTH_SECRET=${AUTH_SECRET:?Set AUTH_SECRET to at least 32 random bytes}"
+      - "AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID:-}"
+      - "AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET:-}"
+      - "AUTH_MICROSOFT_ENTRA_ID_ID=${AUTH_MICROSOFT_ENTRA_ID_ID:-}"
+      - "AUTH_MICROSOFT_ENTRA_ID_SECRET=${AUTH_MICROSOFT_ENTRA_ID_SECRET:-}"
+      - "AUTH_MICROSOFT_ENTRA_ID_ISSUER=${AUTH_MICROSOFT_ENTRA_ID_ISSUER:-https://login.microsoftonline.com/organizations/v2.0}"
+      - "ALLOWED_MICROSOFT_TENANT_IDS=${ALLOWED_MICROSOFT_TENANT_IDS:-}"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
+      identity-link:
+        condition: service_started
     networks:
       - jiffy
     restart: unless-stopped
@@ -82,6 +95,21 @@ services:
         condition: service_healthy
       identity-link-migrate:
         condition: service_completed_successfully
+    networks:
+      - jiffy
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:latest
+    container_name: jiffycrm-adminer
+    profiles:
+      - tools
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=identity-postgres
+    depends_on:
+      - identity-postgres
     networks:
       - jiffy
     restart: unless-stopped
