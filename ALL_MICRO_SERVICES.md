@@ -9,6 +9,7 @@ This document is the service catalog for JiffyCRM. Each service lives in its own
 | overview | [JiffyCRM/overview](https://github.com/JiffyCRM/overview) | Orchestration only | - | None |
 | ui | [JiffyCRM/ui](https://github.com/JiffyCRM/ui) | Next.js 16 + Auth.js | http://localhost:3000 | No app database yet; encrypted JWT session cookies |
 | identity-link | [JiffyCRM/identity-link](https://github.com/JiffyCRM/identity-link) | Go + gRPC + pgx | `localhost:50051` | Dedicated `identity_link` PostgreSQL database |
+| membership | [JiffyCRM/membership](https://github.com/JiffyCRM/membership) | Go + gRPC + pgx | `localhost:50052` | Dedicated `membership` PostgreSQL database |
 
 ### overview
 
@@ -36,6 +37,24 @@ Go gRPC service that owns the mapping from external provider identities to inter
 - Exposes its own README and complete documentation under `docs/`.
 - Is linked to the shared Infisical `jiffycrm` / `dev` environment through `.infisical.yaml`.
 
+### membership
+
+Go gRPC service that owns organizations, memberships, Discord-style roles, role
+hierarchy, effective permissions, and invitations.
+
+- Uses a dedicated `membership` database and runtime role.
+- Stores only `internal_id` values from identity-link; no plaintext email,
+  name, or avatar.
+- Invitations store an HMAC digest of the email using
+  `MEMBERSHIP_INVITATION_HMAC_SECRET` and resolve existing users through
+  `identity-link.FindByEmail`.
+- Enforces role hierarchy and prevents granting permissions the actor does not
+  hold.
+- Exposes `CheckPermission`, `CheckPermissions`, and
+  `GetEffectivePermissions` for other backend services.
+- Is linked to the shared Infisical `jiffycrm` / `dev` environment through
+  `.infisical.yaml`.
+
 ## Local infrastructure
 
 These are development components in `docker-compose.yml`, not independently versioned services.
@@ -45,6 +64,8 @@ These are development components in `docker-compose.yml`, not independently vers
 | postgres | `postgres:latest` | Existing UI/CRM database container (`jiffycrm`); not used by auth today | `localhost:5432` |
 | identity-postgres | `postgres:16-alpine` | Dedicated identity-link database (`identity_link`) | Internal only |
 | identity-link-migrate | Built from identity-link | One-shot identity-link migration job | - |
+| membership-postgres | `postgres:16-alpine` | Dedicated membership database (`membership`) | Internal only |
+| membership-migrate | Built from membership | One-shot membership migration job | - |
 | adminer | `adminer:latest` | Optional database UI, enabled with `make db` | http://localhost:8080 |
 
 All containers share the `jiffycrm-network` Compose network.
@@ -53,8 +74,9 @@ All containers share the `jiffycrm-network` Compose network.
 
 - The browser talks only to the UI.
 - The UI server calls `identity-link` over gRPC at `identity-link:50051` inside Compose, or `localhost:50051` locally.
-- Future backend services also call `identity-link` over gRPC.
-- The browser never calls `identity-link` directly.
+- The UI server will call `membership` over gRPC at `membership:50052` inside Compose, or `localhost:50052` locally, and forwards the session user as `x-user-id`.
+- Other backend services call `membership` for `CheckPermission` / `CheckPermissions` and `identity-link` for identity resolution.
+- The browser never calls `identity-link` or `membership` directly.
 - Services never read or write another service's database.
 
 ## Identity flow
@@ -82,7 +104,6 @@ Browser -> UI OAuth callback (Google / Microsoft Entra ID)
 | Service | Description |
 | --- | --- |
 | auth-service | Future extraction of authentication only if JiffyCRM needs per-customer SSO/SAML/SCIM, token issuance to other services, or centralized session revocation. Current Google/Microsoft OAuth remains in the UI. |
-| membership-service | Organizations, memberships, roles, and invitations. Will resolve existing users through `identity-link.FindByEmail`. |
 | contact-service | Contact and account management. |
 | deal-service | Deals, pipelines, and opportunities. |
 

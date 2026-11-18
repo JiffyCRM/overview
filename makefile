@@ -40,7 +40,7 @@ up:
 	$(DC) up --build
 
 secrets-check:
-	infisical secrets-manager run --env=dev -- bash -c 'test -n "$$AUTH_SECRET" && test -n "$$IDENTITY_LINK_HMAC_SECRET" && echo "Infisical secrets OK"'
+	infisical secrets-manager run --env=dev -- bash -c 'test -n "$$AUTH_SECRET" && test -n "$$IDENTITY_LINK_HMAC_SECRET" && test -n "$$MEMBERSHIP_INVITATION_HMAC_SECRET" && echo "Infisical secrets OK"'
 
 down:
 	$(DC) --profile tools down

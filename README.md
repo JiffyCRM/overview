@@ -71,7 +71,7 @@ make up
 
 `make up` runs `docker compose` through `infisical secrets-manager run --env=dev`, so provider credentials and application secrets are injected at runtime.
 
-The UI will be available at http://localhost:3000 (sign-in at `/login`), and identity-link gRPC at `localhost:50051`. The identity-link migration job runs automatically before the service starts. Its database is a dedicated `identity-link-postgres` container; it has no host port and is only reachable on the Compose network.
+The UI will be available at http://localhost:3000 (sign-in at `/login`), identity-link gRPC at `localhost:50051`, and membership gRPC at `localhost:50052`. The identity-link and membership migration jobs run automatically before the services start. Each service has a dedicated database container with no host port, reachable only on the Compose network.
 
 OAuth redirect URIs:
 
@@ -80,7 +80,7 @@ OAuth redirect URIs:
 
 See the [UI README](https://github.com/JiffyCRM/ui#readme) for provider registration, the Microsoft `email` optional claim, and security notes.
 
-Never commit secrets. Keep `IDENTITY_LINK_HMAC_SECRET` and `AUTH_SECRET` stable: changing the identity-link secret invalidates existing email hash lookups, and changing `AUTH_SECRET` invalidates sessions. See the [identity-link security documentation](https://github.com/JiffyCRM/identity-link/blob/main/docs/security.md).
+Never commit secrets. Keep `AUTH_SECRET`, `IDENTITY_LINK_HMAC_SECRET`, and `MEMBERSHIP_INVITATION_HMAC_SECRET` stable: changing `AUTH_SECRET` invalidates sessions, changing the identity-link secret invalidates existing email hash lookups, and changing the membership invitation secret invalidates pending invitation matching. See the [identity-link security documentation](https://github.com/JiffyCRM/identity-link/blob/main/docs/security.md) and the [membership security documentation](https://github.com/JiffyCRM/membership/blob/main/docs/security.md).
 
 ## Run the UI locally
 
@@ -95,6 +95,10 @@ infisical secrets-manager run --env=dev -- npm run dev
 ## Run identity-link locally
 
 See the [identity-link README](https://github.com/JiffyCRM/identity-link#readme). It can run outside Compose with its own Postgres container, migrations, and gRPC server.
+
+## Run membership locally
+
+See the [membership README](https://github.com/JiffyCRM/membership#readme). It runs with its own Postgres container, embedded migrations, and gRPC server on port `50052`. Invitation flows require a reachable identity-link.
 
 ## Architecture
 
@@ -135,6 +139,16 @@ Identity-link database:
 | Password | `identity_link` |
 | Database | `identity_link` |
 
+Membership database:
+
+| Field | Value |
+| --- | --- |
+| System | PostgreSQL |
+| Server | `membership-postgres` |
+| Username | `membership` |
+| Password | `membership` |
+| Database | `membership` |
+
 UI database:
 
 | Field | Value |
@@ -155,4 +169,4 @@ make db-stop
 
 ## Services
 
-See [ALL_MICRO_SERVICES.md](./ALL_MICRO_SERVICES.md) for the full list. Current services: `ui` (Next.js) and `identity-link` (Go + gRPC).
+See [ALL_MICRO_SERVICES.md](./ALL_MICRO_SERVICES.md) for the full list. Current services: `ui` (Next.js), `identity-link` (Go + gRPC), and `membership` (Go + gRPC).

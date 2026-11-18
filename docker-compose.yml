@@ -99,6 +99,64 @@ services:
       - jiffy
     restart: unless-stopped
 
+  membership-postgres:
+    image: postgres:16-alpine
+    container_name: jiffycrm-membership-postgres
+    environment:
+      POSTGRES_USER: membership
+      POSTGRES_PASSWORD: membership
+      POSTGRES_DB: membership
+    volumes:
+      - membership_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U membership -d membership"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - jiffy
+    restart: unless-stopped
+
+  membership-migrate:
+    build:
+      context: ../membership
+      dockerfile: Dockerfile
+    image: jiffycrm/membership:latest
+    container_name: jiffycrm-membership-migrate
+    entrypoint: ["/usr/local/bin/membership-migrate", "up"]
+    environment:
+      - DATABASE_URL=postgres://membership:membership@membership-postgres:5432/membership?sslmode=disable
+    depends_on:
+      membership-postgres:
+        condition: service_healthy
+    networks:
+      - jiffy
+    restart: "no"
+
+  membership:
+    build:
+      context: ../membership
+      dockerfile: Dockerfile
+    image: jiffycrm/membership:latest
+    container_name: jiffycrm-membership
+    ports:
+      - "127.0.0.1:50052:50052"
+    environment:
+      - DATABASE_URL=postgres://membership:membership@membership-postgres:5432/membership?sslmode=disable
+      - "INVITATION_HMAC_SECRET=${MEMBERSHIP_INVITATION_HMAC_SECRET:?Set MEMBERSHIP_INVITATION_HMAC_SECRET to at least 32 random bytes}"
+      - IDENTITY_LINK_ADDR=identity-link:50051
+      - LOG_LEVEL=info
+    depends_on:
+      membership-postgres:
+        condition: service_healthy
+      membership-migrate:
+        condition: service_completed_successfully
+      identity-link:
+        condition: service_started
+    networks:
+      - jiffy
+    restart: unless-stopped
+
   adminer:
     image: adminer:latest
     container_name: jiffycrm-adminer
@@ -141,3 +199,4 @@ networks:
 volumes:
   postgres_data:
   identity_postgres_data:
+  membership_postgres_data:
